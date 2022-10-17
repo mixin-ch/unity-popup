@@ -1,8 +1,8 @@
 {
-  "name": "com.mixin.[packagename]",
+  "name": "com.mixin.unity-popup",
   "version": "1.0.0",
-  "displayName": "Package Name",
-  "description": "Description",
+  "displayName": "Mixin Popup",
+  "description": "A Popup package for Unity.",
   "unity": "2021.1",
   "dependencies": {
     "com.mixin.unity-utils": "1.0.0"

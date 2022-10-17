@@ -1,5 +1,5 @@
 {
-    "name": "Mixin.[package-name].Editor",
+    "name": "Mixin.unity-popup.Editor",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [],
