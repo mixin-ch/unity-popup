@@ -6,7 +6,7 @@ namespace Mixin.Popup
     /// <summary>
     /// 
     /// </summary>
-    public class PopupButton
+    public struct PopupButton
     {
         /// <summary>
         /// 
@@ -23,6 +23,11 @@ namespace Mixin.Popup
         /// </summary>
         private Color _backgroundColor;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private AudioClip _onClickSound;
+
         public string Text { get => _text; set => _text = value; }
         public Action Call { get => _call; set => _call = value; }
         public Color BackgroundColor { get => _backgroundColor; set => _backgroundColor = value; }
@@ -30,9 +35,9 @@ namespace Mixin.Popup
         /// <inheritdoc cref="PopupButton.PopupButton(string, Action, Color)"/>
         public PopupButton(string text, Action call)
         {
-            Text = text;
-            Call = call;
-            BackgroundColor = Color.grey;
+            _text = text;
+            _call = call;
+            _backgroundColor = Color.grey;
         }
 
         /// <summary>
@@ -43,19 +48,9 @@ namespace Mixin.Popup
         /// <param name="backgroundColor"></param>
         public PopupButton(string text, Action call, Color backgroundColor)
         {
-            Text = text;
-            Call = call;
-            BackgroundColor = backgroundColor;
-        }
-
-
-        public PopupButton GetSubmitButton(Action call)
-        {
-            return new PopupButton("Cancel", call);
-        }
-        public PopupButton GetCancelButton()
-        {
-            return new PopupButton("Cancel", null);
+            _text = text;
+            _call = call;
+            _backgroundColor = backgroundColor;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
 namespace Mixin.Popup
@@ -10,28 +9,13 @@ namespace Mixin.Popup
         public PopupType PopupType;
         public string Title;
         public string Message;
-        public string SubmitButtonText = ButtonTextType.Ok.ToString();
-        public bool CancelButton = false;
-        public AudioClip CustomAudioClip = null;
-
-        public Sprite ImageBackeground = null;
-        public Color ImageBackgroundColor = Color.white;
-        public Sprite ImageMiddleground = null;
-        public Color ImageMiddlegroundColor = Color.white;
-        public Sprite ImageForeground = null;
-        public Color ImageForegroundColor = Color.white;
-
-        public Action Call = null;
-        public bool SubmitButtonEnabled = true;
+        public AudioClip SoundOpen = null;
+        public AudioClip SoundClose = null;
 
         public event Action OnPopupClosed;
 
-        // custom button
-        public bool CustomButton = false;
-        public string CustomButtonText = null;
-        public Action CustomButtonCall = null;
-
         public List<PopupButton> ButtonList = new List<PopupButton>();
+        public List<PopupImage> ImageList = new List<PopupImage>();
 
         public PopupObject(
             PopupType popupType,
@@ -50,87 +34,52 @@ namespace Mixin.Popup
             return this;
         }
 
-        public PopupObject AddCancelButton()
+        public PopupObject AddSprite(PopupImage image)
         {
-            CancelButton = true;
-            return this;
-        }
-        public PopupObject AddSprite(Sprite sprite)
-        {
-            if (sprite != null)
-                ImageMiddleground = sprite;
-            return this;
-        }
-        public PopupObject AddSprite(Sprite sprite, Sprite spriteFrame)
-        {
-            if (sprite != null)
-                ImageMiddleground = sprite;
-            if (spriteFrame != null)
-                ImageForeground = spriteFrame;
-            return this;
-        }
-        public PopupObject AddSprite(Sprite sprite, Color color)
-        {
-            ImageMiddlegroundColor = color;
-            return AddSprite(sprite);
-        }
-        public PopupObject AddSprite(Sprite sprite, Color color, Sprite spriteFrame, Color frameColor)
-        {
-            ImageMiddlegroundColor = color;
-            ImageForegroundColor = frameColor;
-            return AddSprite(sprite, spriteFrame);
-        }
-        public PopupObject AddCall(Action call)
-        {
-            Call = call;
+            ImageList.Add(image);
             return this;
         }
 
-        public PopupObject AddSubmitButtonText(string submitButtonText)
+        public PopupObject AddOpenSound(AudioClip audioClip)
         {
-            SubmitButtonText = submitButtonText;
-            return this;
-        }
-        public PopupObject AddSubmitButtonText(ButtonTextType text)
-        {
-            SubmitButtonText = text.ToString();
+            SoundOpen = audioClip;
             return this;
         }
 
-        public PopupObject AddCustomSound(AudioClip audioClip)
+        public PopupObject AddCloseSound(AudioClip audioClip)
         {
-            CustomAudioClip = audioClip;
-            return this;
-        }
-
-        public PopupObject AddCustomButton(string buttonText, Action buttonAction)
-        {
-            CustomButton = true;
-            CustomButtonText = buttonText;
-            CustomButtonCall = buttonAction;
-            return this;
-        }
-
-        public PopupObject DisableSubmitButton()
-        {
-            SubmitButtonEnabled = false;
+            SoundClose = audioClip;
             return this;
         }
 
 
 
         /*--------------*/
+        /// <summary>
+        /// Adds the PopupObject to the Queue.
+        /// </summary>
+        /// <returns></returns>
         public PopupObject AddToList()
         {
             PopupManager.Instance.AddPopupObjectToList(this);
             return this;
         }
+
+        /// <summary>
+        /// This opens all Popups from the List one after another.
+        /// </summary>
+        /// <returns></returns>
         public PopupObject OpenAll()
         {
             PopupManager.Instance.TryOpenNext();
             return this;
         }
-        //auto adds the object to list and tries to open it
+
+
+        /// <summary>
+        /// Adds this PopupObject to the List and tries to open it.
+        /// </summary>
+        /// <returns></returns>
         public PopupObject AutoOpen()
         {
             AddToList();
@@ -145,4 +94,5 @@ namespace Mixin.Popup
             OnPopupClosed?.Invoke();
         }
     }
+
 }

@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Mixin.Utils;
+using UnityEditor;
 
 namespace Mixin.Popup
 {
@@ -13,7 +14,7 @@ namespace Mixin.Popup
     public class PopupManager : Singleton<PopupManager>
     {
         [SerializeField]
-        private bool _showPopup = true;
+        private bool _showPopupInEditor = true;
 
         [Header("Base Setup")]
         ///<summary>
@@ -32,7 +33,14 @@ namespace Mixin.Popup
         Button _backgroundButton;
         [Obsolete]
         GameObject _contentContainer;
+
+        [Header("Animation")]
         [SerializeField] Animator _animator;
+        [SerializeField]
+        private string _triggerVariableOpen = "open";
+
+        [SerializeField]
+        private string _triggerVariableClose = "close";
 
         [Header("Message Box")]
         [SerializeField] Image _messageBoxBackgroundImage;
@@ -44,20 +52,24 @@ namespace Mixin.Popup
         [SerializeField]
         GameObject _imageContainer;
 
-        /// <summary>
-        /// If true it will automatically refrence the ImageObjects based of the ImageContainer.
-        /// </summary>
+        /* /// <summary>
+         /// If true it will automatically refrence the ImageObjects based of the ImageContainer.
+         /// </summary>
+         [SerializeField]
+         [Tooltip("If true it will automatically refrence the ImageObjects based of the ImageContainer.")]
+         bool _autoIndexImageChildren = true;*/
+
         [SerializeField]
-        [Tooltip("If true it will automatically refrence the ImageObjects based of the ImageContainer.")]
-        bool _autoIndexImageChildren = true;
-        [ConditionalField("_autoIndexImageChildren", false)]
-        [SerializeField]
+        private MixinDictionary<PopupImagePosition, Image> _imageList =
+            new MixinDictionary<PopupImagePosition, Image>();
+
+        [Obsolete]
         Image _imageBackground;
         [ConditionalField("_autoIndexImageChildren", false)]
-        [SerializeField]
+        [Obsolete]
         Image _imageMiddleground;
         [ConditionalField("_autoIndexImageChildren", false)]
-        [SerializeField]
+        [Obsolete]
         Image _imageForeground;
 
         [Header("Buttons")]
@@ -78,6 +90,7 @@ namespace Mixin.Popup
         [SerializeField] AudioClip _soundClose;
 
         [Header("Colors")]
+        [SerializeField] Color _defaultButtonColor = Color.grey;
         [SerializeField] Color _defaultColor = Color.white;
         [SerializeField] Color _successColor = Color.green;
         [SerializeField] Color _warningColor = Color.yellow;
@@ -89,6 +102,9 @@ namespace Mixin.Popup
         private AudioManager _audioManager;
         private List<PopupObject> _popupObjectList = new List<PopupObject>();
 
+        /// <summary>
+        /// This bool tells if there is currently a Popup open.
+        /// </summary>
         private bool _hasOpenPopup;
 
         public static event Action OnPopupOpened;
@@ -107,20 +123,7 @@ namespace Mixin.Popup
         {
             _audioManager = AudioManager.Instance;
 
-            if (_showPopup)
-                _popupComposition.SetActive(true);
-            else
-                _popupComposition.SetActive(false);
-
-            if (_autoIndexImageChildren)
-            {
-                if (_imageContainer.transform.childCount < 3)
-                    $"Please set 3 ImageObjects in the ImageContainer.".LogError();
-
-                _imageBackground = _imageContainer.transform.GetChild(0)?.gameObject.GetComponent<Image>();
-                _imageMiddleground = _imageContainer.transform.GetChild(1)?.gameObject.GetComponent<Image>();
-                _imageForeground = _imageContainer.transform.GetChild(2)?.gameObject.GetComponent<Image>();
-            }
+            _popupComposition.SetActive(false);
 
             SetupFinished = true;
         }
@@ -133,7 +136,10 @@ namespace Mixin.Popup
             _title.gameObject.SetActive(false);
             _message.gameObject.SetActive(false);
             _imageContainer.SetActive(false);
-            _imageForeground.enabled = false;
+
+            // Disable each Image.
+            foreach (KeyValuePair<PopupImagePosition, Image> image in _imageList)
+                image.Value.gameObject.SetActive(false);
 
             _buttonPrefabContainer.DestroyChildren();
         }
@@ -146,6 +152,7 @@ namespace Mixin.Popup
             if (_popupObjectList.Count > 0 && !_hasOpenPopup)
                 Open(_popupObjectList[0]);
         }
+
         public void Open(PopupObject popupObject)
         {
             //first clear everything
@@ -155,38 +162,23 @@ namespace Mixin.Popup
             _lastOpenedPopupObject = popupObject;
             _hasOpenPopup = true;
 
-            // warn if cancel button and custom button are true
-            if (popupObject.CancelButton && popupObject.CustomButton)
-                Debug.LogWarning(
-                    $"{MethodBase.GetCurrentMethod()} Conflict: Cancel Button and Custom Button are true. Overwriting Cancel Button...");
-
             SetText(_title, popupObject.Title);
             SetText(_message, popupObject.Message);
-            SetImage(_imageBackground, popupObject.ImageBackeground, popupObject.ImageBackgroundColor);
-            SetImage(_imageMiddleground, popupObject.ImageMiddleground, popupObject.ImageMiddlegroundColor);
-            SetImage(_imageForeground, popupObject.ImageForeground, popupObject.ImageForegroundColor);
 
-            // Generate all buttons.
-            foreach (PopupButton button in popupObject.ButtonList)
-            {
-                // Get the button component.
-                MixinButton buttonObj = _buttonPrefab.GeneratePrefab(_buttonPrefabContainer)
-                    .GetComponent<MixinButton>();
+            GenerateImages(popupObject);
 
-                // Set the button text.
-                buttonObj.ButtonText.text = button.Text;
+            // Show ImageContainer when there are Images.
+            if (popupObject.ImageList.Count >= 1)
+                _imageContainer.SetActive(true);
 
-                // Add the listeners.
-                if (button.Call != null)
-                    buttonObj.onClick.AddListener(() => button.Call());
-                buttonObj.onClick.AddListener(Close);
+            GenerateButtons(popupObject);
 
-                buttonObj.gameObject.SetActive(true);
-            }
-
-            //close popup when clicked somewhere on background
+            // Close Popup when clicked on the background.
             if (_backgroundButton != null)
                 _backgroundButton.onClick.AddListener(OnCloseButtonClick);
+            // Close Popup when clicked on the [X]-Button.
+            if (_closeXButton != null)
+                _closeXButton.onClick.AddListener(OnCloseButtonClick);
 
             /* at this point it gets visible, config should be done before */
 
@@ -197,20 +189,11 @@ namespace Mixin.Popup
             AudioClip audioClip = null;
             string animationName = null;
 
-            // Fit the Rect Transform of the Overlay
-            RectTransform rect = _messageBoxOverlay.gameObject.GetComponent<RectTransform>();
-
-            rect.offsetMin = new Vector2(0, 0); // Left, Bottom
-            rect.offsetMax = new Vector2(0, 0); // Right, Top
-
-            rect.anchorMin = new Vector2(0, 0); // Left, Bottom
-            rect.anchorMax = new Vector2(1f, 1f); // Right, Top
-
-            ExecuteEffects(popupObject, out audioClip, out animationName);
+            //ExecuteEffects(popupObject, out audioClip, out animationName);
 
             //if PopupObject has custom audio clip, then overwrite
-            if (popupObject.CustomAudioClip != null)
-                audioClip = popupObject.CustomAudioClip;
+            if (popupObject.SoundOpen != null)
+                audioClip = popupObject.SoundOpen;
 
             //execute PopupType stuff
             // Play Sound
@@ -218,11 +201,46 @@ namespace Mixin.Popup
             //audioManager.Play(audioManager.CreateNewSound(audioClip), false);
 
             // Trigger Animation
-            _animator.SetTrigger(animationName);
+            _animator.SetTrigger(_triggerVariableOpen);
 
             //remove object from list if it exists
             if (_popupObjectList.Contains(popupObject))
                 _popupObjectList.Remove(popupObject);
+        }
+
+        private void GenerateImages(PopupObject popupObject)
+        {
+            // Show all Images from List.
+            foreach (PopupImage popupImage in popupObject.ImageList)
+            {
+                Image image = _imageList[popupImage.Position];
+                image.sprite = popupImage.Sprite;
+                image.color = popupImage.Color;
+                image.gameObject.SetActive(true);
+            }
+        }
+
+        private void GenerateButtons(PopupObject popupObject)
+        {
+            // Generate all buttons.
+            foreach (PopupButton button in popupObject.ButtonList)
+            {
+                // Get the button component.
+                MixinButton buttonObj = _buttonPrefab.GeneratePrefab(_buttonPrefabContainer)
+                    .GetComponent<MixinButton>();
+                Image imageObj = buttonObj.GetComponent<Image>();
+
+                // Set the button text.
+                buttonObj.ButtonText.text = button.Text;
+                imageObj.color = button.BackgroundColor;
+
+                // Add the listeners.
+                if (button.Call != null)
+                    buttonObj.onClick.AddListener(() => button.Call());
+                buttonObj.onClick.AddListener(Close);
+
+                buttonObj.gameObject.SetActive(true);
+            }
         }
 
         private void ExecuteEffects(PopupObject popupObject, out AudioClip audioClip, out string animationName)
@@ -280,24 +298,6 @@ namespace Mixin.Popup
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="imageObj"></param>
-        /// <param name="sprite"></param>
-        /// <param name="color"></param>
-        private void SetImage(Image imageObj, Sprite? sprite, Color color)
-        {
-            if (sprite != null)
-            {
-                imageObj.sprite = sprite;
-                imageObj.color = color;
-                imageObj.gameObject.SetActive(true);
-            }
-            else
-                imageObj.gameObject.SetActive(false);
-        }
-
-        /// <summary>
         /// Adds a PopupObject to the queue.
         /// </summary>
         /// <param name="popupObject"></param>
@@ -312,18 +312,21 @@ namespace Mixin.Popup
         /// <param name="popupObjectList"></param>
         public void AddPopupObjectsToList(List<PopupObject> popupObjectList)
         {
-            this._popupObjectList.AddRange(popupObjectList);
+            _popupObjectList.AddRange(popupObjectList);
         }
 
         // closes the popup
         public void Close()
         {
             // Try Play Sound
-            if (_audioManager != null)
-                //audioManager.Play(audioManager.CreateNewSound(_soundClose), false);
+            //if (_audioManager != null)
+            //audioManager.Play(audioManager.CreateNewSound(_soundClose), false);
 
-                //the trigger automatically calls OnPopupClosed() and closes the popup
-                _animator.SetTrigger("Close");
+            //the trigger automatically calls OnPopupClosed() and closes the popup
+            //_animator.SetTrigger("Close");
+
+            //_animator.Play("close");
+            _animator.SetTrigger(_triggerVariableClose);
         }
 
         //this method gets called by the animator
@@ -337,14 +340,6 @@ namespace Mixin.Popup
             _hasOpenPopup = false;
             TryOpenNext();
         }
-
-        private void OnSubmitButtonClick()
-        {
-            //TODO remove all listenesers
-            //play sound
-            //SubmitButton.onClick.RemoveAllListeners();
-            Close();
-        }
         private void OnCloseButtonClick()
         {
             //TODO remove all listenesers
@@ -356,6 +351,11 @@ namespace Mixin.Popup
         private void OnValidate()
         {
             Setup();
+
+            if (_showPopupInEditor)
+                _popupComposition.SetActive(true);
+            else
+                _popupComposition.SetActive(false);
         }
     }
     public enum ButtonTextType
