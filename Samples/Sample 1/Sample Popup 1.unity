@@ -516,6 +516,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 270502519}
   m_CullTransparentMesh: 1
+--- !u!1 &340325994
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 340325996}
+  - component: {fileID: 340325995}
+  m_Layer: 0
+  m_Name: Audio Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &340325995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 340325994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ad151777057c124aa9371a9e735e338, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &340325996
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 340325994}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 405.27493, y: 194.93546, z: 0.84714925}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &475224745
 GameObject:
   m_ObjectHideFlags: 0
@@ -763,7 +807,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &517842093
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1584,6 +1628,7 @@ MonoBehaviour:
   _button: {fileID: 992017734}
   _sprite1: {fileID: 21300000, guid: ded3ad5497a63944ea1d8a4f5d160883, type: 3}
   _sprite2: {fileID: 21300000, guid: 525abe01faa2c1c40a691ee89ce1afe0, type: 3}
+  _onButtonClickSound: {fileID: 11400000, guid: b01d267716ef8ad49a13724e1f097666, type: 2}
 --- !u!4 &1132975057
 Transform:
   m_ObjectHideFlags: 0

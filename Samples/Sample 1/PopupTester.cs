@@ -14,7 +14,7 @@ public class PopupTester : MonoBehaviour
     [SerializeField]
     private Sprite _sprite2;
     [SerializeField]
-    private AudioTrackSetup _audioTrackSetup;
+    private AudioTrackSetupSO _onButtonClickSound;
 
     // Start is called before the first frame update
     private void OnEnable()
@@ -24,11 +24,15 @@ public class PopupTester : MonoBehaviour
 
     private void CreatePopup()
     {
+        AudioTrackSetup onButtonClickSound = _onButtonClickSound.ToAudioTrackSetup();
+
         new PopupObject("Title", "Message")
-                    .AddButton(new PopupButton("Submit1", null, Color.yellow, _audioTrackSetup))
-                    .AddButton(new PopupButton("Submit2", null, Color.grey, _audioTrackSetup))
+                    .AddButton(new PopupButton("Submit1", null, Color.yellow, onButtonClickSound))
+                    .AddButton(new PopupButton("Submit2", null, Color.grey, onButtonClickSound))
                     .AddSprite(new PopupImage(_sprite1))
                     .AddSprite(new PopupImage(_sprite2, Color.white, PopupImagePosition.Foreground))
+                    .AddOpenSound(onButtonClickSound)
+                    .AddCloseSound(onButtonClickSound)
                     .AutoOpen();
     }
 }

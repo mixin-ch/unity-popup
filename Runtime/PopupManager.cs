@@ -187,7 +187,7 @@ namespace Mixin.Popup
             //now show everything
             _popupComposition.SetActive(true);
 
-            AudioManager.Instance.Play(popupObject.SoundOpen);
+            PlaySound(popupObject.SoundOpen);
 
             // Trigger Animation
             _animator.SetTrigger(_triggerVariableOpen);
