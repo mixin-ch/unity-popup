@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Mixin.Utils;
 using UnityEditor;
+using Mixin.Audio;
 
 namespace Mixin.Popup
 {
@@ -129,10 +130,10 @@ namespace Mixin.Popup
         }
         private void Clear()
         {
-            //clear button listeners
+            // Clear button listeners
             _backgroundButton.onClick.RemoveAllListeners();
 
-            //set inactive
+            // Set inactive
             _title.gameObject.SetActive(false);
             _message.gameObject.SetActive(false);
             _imageContainer.SetActive(false);
@@ -141,6 +142,7 @@ namespace Mixin.Popup
             foreach (KeyValuePair<PopupImagePosition, Image> image in _imageList)
                 image.Value.gameObject.SetActive(false);
 
+            // Destroy all buttons.
             _buttonPrefabContainer.DestroyChildren();
         }
 
@@ -185,20 +187,7 @@ namespace Mixin.Popup
             //now show everything
             _popupComposition.SetActive(true);
 
-            //variables based on type
-            AudioClip audioClip = null;
-            string animationName = null;
-
-            //ExecuteEffects(popupObject, out audioClip, out animationName);
-
-            //if PopupObject has custom audio clip, then overwrite
-            if (popupObject.SoundOpen != null)
-                audioClip = popupObject.SoundOpen;
-
-            //execute PopupType stuff
-            // Play Sound
-            //if (_audioManager != null)
-            //audioManager.Play(audioManager.CreateNewSound(audioClip), false);
+            AudioManager.Instance.Play(popupObject.SoundOpen);
 
             // Trigger Animation
             _animator.SetTrigger(_triggerVariableOpen);
@@ -238,47 +227,15 @@ namespace Mixin.Popup
                 if (button.Call != null)
                     buttonObj.onClick.AddListener(() => button.Call());
                 buttonObj.onClick.AddListener(Close);
+                buttonObj.onClick.AddListener(() => PlaySound(button.OnClickSound));
 
                 buttonObj.gameObject.SetActive(true);
             }
         }
 
-        private void ExecuteEffects(PopupObject popupObject, out AudioClip audioClip, out string animationName)
+        private void PlaySound(AudioTrackSetup audioTrackSetup)
         {
-            //execute animations etc. based on type
-            switch (popupObject.PopupType)
-            {
-                case PopupType.Confirm:
-                    //if (popupObject.sprite == null)
-                    //    popupObject.sprite = SpriteCollection.Instance.GetSprite(SpriteType.Checkmark);
-                    audioClip = _soundConfirm;
-                    animationName = "Open";
-                    //_messageBoxBackgroundImage.color = _warningColor.WithSaturation(_SATURATION);
-                    _messageBoxOverlay.color = _warningColor;
-                    break;
-                case PopupType.Error:
-                    //if (popupObject.sprite == null)
-                    //    popupObject.sprite = SpriteCollection.Instance.GetSprite(SpriteType.Error);
-                    audioClip = _soundError;
-                    animationName = "Open";
-                    //_messageBoxBackgroundImage.color = _errorColor.WithSaturation(_SATURATION);
-                    _messageBoxOverlay.color = _errorColor;
-                    break;
-                case PopupType.Reward:
-                    //if (popupObject.sprite == null)
-                    //    popupObject.sprite = SpriteCollection.Instance.GetSprite(SpriteType.Reward);
-                    audioClip = _soundReward;
-                    animationName = "Open";
-                    //_messageBoxBackgroundImage.color = _successColor.WithSaturation(_SATURATION);
-                    _messageBoxOverlay.color = _successColor;
-                    break;
-                default:
-                    audioClip = _soundDefault;
-                    animationName = "Open";
-                    _messageBoxBackgroundImage.color = _defaultColor;
-                    _messageBoxOverlay.color = _defaultColor;
-                    break;
-            }
+            AudioManager.Instance.Play(audioTrackSetup);
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Mixin.Audio;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,11 +7,10 @@ namespace Mixin.Popup
 {
     public class PopupObject
     {
-        public PopupType PopupType;
         public string Title;
         public string Message;
-        public AudioClip SoundOpen = null;
-        public AudioClip SoundClose = null;
+        public AudioTrackSetup SoundOpen = null;
+        public AudioTrackSetup SoundClose = null;
 
         public event Action OnPopupClosed;
 
@@ -18,12 +18,10 @@ namespace Mixin.Popup
         public List<PopupImage> ImageList = new List<PopupImage>();
 
         public PopupObject(
-            PopupType popupType,
             string title,
             string message
             )
         {
-            PopupType = popupType;
             Title = title;
             Message = message;
         }
@@ -40,13 +38,13 @@ namespace Mixin.Popup
             return this;
         }
 
-        public PopupObject AddOpenSound(AudioClip audioClip)
+        public PopupObject AddOpenSound(AudioTrackSetup audioClip)
         {
             SoundOpen = audioClip;
             return this;
         }
 
-        public PopupObject AddCloseSound(AudioClip audioClip)
+        public PopupObject AddCloseSound(AudioTrackSetup audioClip)
         {
             SoundClose = audioClip;
             return this;

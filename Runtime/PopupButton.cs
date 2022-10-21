@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Mixin.Audio;
+using System;
 using UnityEngine;
 
 namespace Mixin.Popup
@@ -26,19 +27,12 @@ namespace Mixin.Popup
         /// <summary>
         /// 
         /// </summary>
-        private AudioClip _onClickSound;
+        private AudioTrackSetup _onClickSound;
 
         public string Text { get => _text; set => _text = value; }
         public Action Call { get => _call; set => _call = value; }
         public Color BackgroundColor { get => _backgroundColor; set => _backgroundColor = value; }
-
-        /// <inheritdoc cref="PopupButton.PopupButton(string, Action, Color)"/>
-        public PopupButton(string text, Action call)
-        {
-            _text = text;
-            _call = call;
-            _backgroundColor = Color.grey;
-        }
+        public AudioTrackSetup OnClickSound { get => _onClickSound; set => _onClickSound = value; }
 
         /// <summary>
         /// 
@@ -46,11 +40,13 @@ namespace Mixin.Popup
         /// <param name="text"></param>
         /// <param name="call"></param>
         /// <param name="backgroundColor"></param>
-        public PopupButton(string text, Action call, Color backgroundColor)
+        /// <param name="onClickSound"></param>
+        public PopupButton(string text, Action call, Color backgroundColor, AudioTrackSetup onClickSound)
         {
             _text = text;
             _call = call;
             _backgroundColor = backgroundColor;
+            _onClickSound = onClickSound;
         }
     }
 }

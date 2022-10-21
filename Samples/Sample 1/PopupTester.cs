@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mixin.Popup;
 using UnityEngine.UI;
+using Mixin.Audio;
 
 public class PopupTester : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class PopupTester : MonoBehaviour
     private Sprite _sprite1;
     [SerializeField]
     private Sprite _sprite2;
+    [SerializeField]
+    private AudioTrackSetup _audioTrackSetup;
 
     // Start is called before the first frame update
     private void OnEnable()
@@ -21,10 +24,9 @@ public class PopupTester : MonoBehaviour
 
     private void CreatePopup()
     {
-        new PopupObject(PopupType.Default, "Title", "Message")
-                    .AddButton(new PopupButton("Submit1", null, Color.yellow))
-                    .AddButton(new PopupButton("Submit2", null, Color.red))
-                    .AddButton(new PopupButton("Submit3", null))
+        new PopupObject("Title", "Message")
+                    .AddButton(new PopupButton("Submit1", null, Color.yellow, _audioTrackSetup))
+                    .AddButton(new PopupButton("Submit2", null, Color.grey, _audioTrackSetup))
                     .AddSprite(new PopupImage(_sprite1))
                     .AddSprite(new PopupImage(_sprite2, Color.white, PopupImagePosition.Foreground))
                     .AutoOpen();
