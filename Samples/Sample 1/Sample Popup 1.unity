@@ -386,6 +386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9717fd5c66756b942bf578796ab902a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _debugMode: 1
   _showPopupInEditor: 1
   _autoSetup: 1
   _popupComposition: {fileID: 517842092}
@@ -807,7 +808,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &517842093
 RectTransform:
   m_ObjectHideFlags: 0

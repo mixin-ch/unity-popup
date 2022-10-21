@@ -14,6 +14,15 @@ namespace Mixin.Popup
     [ExecuteAlways]
     public class PopupManager : Singleton<PopupManager>
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        [SerializeField]
+        private bool _debugMode = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
         [SerializeField]
         private bool _showPopupInEditor = true;
 
@@ -122,11 +131,17 @@ namespace Mixin.Popup
 
         public void Setup()
         {
+            if (_debugMode)
+                $"Setting up Popup".LogProgress();
+
             _audioManager = AudioManager.Instance;
 
             _popupComposition.SetActive(false);
 
             SetupFinished = true;
+
+            if (_debugMode)
+                $"Popup set up".LogSuccess();
         }
         private void Clear()
         {
@@ -144,6 +159,9 @@ namespace Mixin.Popup
 
             // Destroy all buttons.
             _buttonPrefabContainer.DestroyChildren();
+
+            if (_debugMode)
+                $"Popup cleared".Log();
         }
 
         // only open with message
@@ -157,7 +175,10 @@ namespace Mixin.Popup
 
         public void Open(PopupObject popupObject)
         {
-            //first clear everything
+            if (_debugMode)
+                $"Opening Popup".LogProgress();
+
+            // First clear everything
             Clear();
 
             // Set the last opened Popup Object
@@ -177,14 +198,14 @@ namespace Mixin.Popup
 
             // Close Popup when clicked on the background.
             if (_backgroundButton != null)
-                _backgroundButton.onClick.AddListener(OnCloseButtonClick);
+                _backgroundButton.onClick.AddListener(Close);
             // Close Popup when clicked on the [X]-Button.
             if (_closeXButton != null)
-                _closeXButton.onClick.AddListener(OnCloseButtonClick);
+                _closeXButton.onClick.AddListener(Close);
 
             /* at this point it gets visible, config should be done before */
 
-            //now show everything
+            // Now show everything
             _popupComposition.SetActive(true);
 
             PlaySound(popupObject.SoundOpen);
@@ -192,9 +213,12 @@ namespace Mixin.Popup
             // Trigger Animation
             _animator.SetTrigger(_triggerVariableOpen);
 
-            //remove object from list if it exists
+            // Remove object from list if it exists
             if (_popupObjectList.Contains(popupObject))
                 _popupObjectList.Remove(popupObject);
+
+            if (_debugMode)
+                $"Popup opened".LogSuccess();
         }
 
         private void GenerateImages(PopupObject popupObject)
@@ -233,6 +257,10 @@ namespace Mixin.Popup
             }
         }
 
+        /// <summary>
+        /// Play a Sound.
+        /// </summary>
+        /// <param name="audioTrackSetup"></param>
         private void PlaySound(AudioTrackSetup audioTrackSetup)
         {
             AudioManager.Instance.Play(audioTrackSetup);
@@ -272,37 +300,30 @@ namespace Mixin.Popup
             _popupObjectList.AddRange(popupObjectList);
         }
 
-        // closes the popup
+        // Closes the popup
         public void Close()
         {
-            // Try Play Sound
-            //if (_audioManager != null)
-            //audioManager.Play(audioManager.CreateNewSound(_soundClose), false);
+            if (_debugMode)
+                $"Closing Popup".LogProgress();
 
-            //the trigger automatically calls OnPopupClosed() and closes the popup
-            //_animator.SetTrigger("Close");
+            //the trigger automatically calls HandleOnPopupClosed() and closes the popup
+            PlaySound(_lastOpenedPopupObject.SoundClose);
 
-            //_animator.Play("close");
             _animator.SetTrigger(_triggerVariableClose);
         }
 
         //this method gets called by the animator
         public void HandleOnPopupClosed()
         {
-            print("popup closed");
             _popupComposition.SetActive(false);
 
             // Fire Event on Popup Closed 
             _lastOpenedPopupObject.FireOnPopupClosedEvent();
             _hasOpenPopup = false;
             TryOpenNext();
-        }
-        private void OnCloseButtonClick()
-        {
-            //TODO remove all listenesers
-            //play sound
-            //SubmitButton.onClick.RemoveAllListeners();
-            Close();
+
+            if (_debugMode)
+                $"Popup closed".LogSuccess();
         }
 
         private void OnValidate()
@@ -314,30 +335,5 @@ namespace Mixin.Popup
             else
                 _popupComposition.SetActive(false);
         }
-    }
-    public enum ButtonTextType
-    {
-        NONE,
-        Yes,
-        Confirm,
-        Ok,
-        Send,
-        Submit,
-        Play,
-        Cancel,
-        No,
-        Exit,
-        Cool,
-        Wow,
-        Save,
-        Nice,
-    }
-    public enum PopupType
-    {
-        Default,
-        Confirm,
-        Error,
-        Reward,
-        Success,
     }
 }
