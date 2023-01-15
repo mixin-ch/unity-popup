@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mixin.Popup;
 using UnityEngine.UI;
-using Mixin.Audio;
+using Mixin.Utils.Audio;
 
 public class PopupTester : MonoBehaviour
 {
@@ -14,7 +14,11 @@ public class PopupTester : MonoBehaviour
     [SerializeField]
     private Sprite _sprite2;
     [SerializeField]
-    private AudioTrackSetupSO _onButtonClickSound;
+    private AudioTrackSetupSO _buttonClickSound;
+    [SerializeField]
+    private AudioTrackSetupSO _popupOpenSound;
+    [SerializeField]
+    private AudioTrackSetupSO _popupCloseSound;
 
     // Start is called before the first frame update
     private void OnEnable()
@@ -24,15 +28,17 @@ public class PopupTester : MonoBehaviour
 
     private void CreatePopup()
     {
-        AudioTrackSetup onButtonClickSound = _onButtonClickSound.ToAudioTrackSetup();
+        AudioTrackSetup buttonClickSound = _buttonClickSound.ToAudioTrackSetup();
+        AudioTrackSetup popupOpenSound = _popupOpenSound.ToAudioTrackSetup();
+        AudioTrackSetup popupCloseSound = _popupCloseSound.ToAudioTrackSetup();
 
         new PopupObject("Title", "Message")
-                    .AddButton(new PopupButton("Submit1", null, Color.yellow, onButtonClickSound))
-                    .AddButton(new PopupButton("Submit2", null, Color.grey, onButtonClickSound))
+                    .AddButton(new PopupButton("Submit", null, Color.yellow, buttonClickSound))
+                    .AddButton(new PopupButton("Cancel", null, Color.grey, buttonClickSound))
                     .AddSprite(new PopupImage(_sprite1))
                     .AddSprite(new PopupImage(_sprite2, Color.white, PopupImagePosition.Foreground))
-                    .AddOpenSound(onButtonClickSound)
-                    .AddCloseSound(onButtonClickSound)
+                    .AddPopupOpenSound(popupOpenSound)
+                    .AddPopupCloseSound(popupCloseSound)
                     .AutoOpen();
     }
 }

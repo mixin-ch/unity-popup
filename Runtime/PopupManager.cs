@@ -7,126 +7,178 @@ using UnityEngine;
 using UnityEngine.UI;
 using Mixin.Utils;
 using UnityEditor;
-using Mixin.Audio;
+using Mixin.Utils.Audio;
 
 namespace Mixin.Popup
 {
+    /// <summary>
+    /// Manages all Popups.
+    /// </summary>
     [ExecuteAlways]
     public class PopupManager : Singleton<PopupManager>
     {
         /// <summary>
-        /// 
+        /// When enabled it will output console logs.
         /// </summary>
+        [Tooltip("When enabled it will output console logs.")]
         [SerializeField]
         private bool _debugMode = false;
 
         /// <summary>
-        /// 
+        /// If the Popup should be visible in Editor Mode.
         /// </summary>
+        [Tooltip("If the Popup should be visible in Editor Mode.")]
         [SerializeField]
         private bool _showPopupInEditor = true;
 
-        [Header("Base Setup")]
+        /****************************************/
+        /****************Base Setup***************/
         ///<summary>
         /// When enabled the setup will be called on awake.
         /// </summary>
+        [Header("Base Setup")]
         [SerializeField]
         [Tooltip("When enabled the setup will be called on awake.")]
         private bool _autoSetup = false;
-        [SerializeField] GameObject _popupComposition;
 
         /// <summary>
-        /// If not null the Popup automatically closes when pressed on this background.
+        /// The object that will be hidden, when Popup closes.
         /// </summary>
-        [Tooltip("If not null the Popup automatically closes when pressed on this background.")]
+        [Tooltip("The object that will be hidden, when Popup closes.")]
         [SerializeField]
-        Button _backgroundButton;
-        [Obsolete]
-        GameObject _contentContainer;
+        private GameObject _popupComposition;
 
+        /****************************************/
+        /****************Animation***************/
+        /// <summary>
+        /// The Animator with all Animations.
+        /// </summary>
         [Header("Animation")]
-        [SerializeField] Animator _animator;
+        [SerializeField]
+        private Animator _animator;
+
+        /// <summary>
+        /// This variable will trigger in the Animator. 
+        /// You can use it for Transition Conditions.<br></br>
+        /// This variable gets called when the Popup opens.
+        /// </summary>
+        [Tooltip("This variable will trigger in the Animator. " +
+            "You can use it for Transition Conditions." +
+            "This variable gets called when the Popup opens.")]
         [SerializeField]
         private string _triggerVariableOpen = "open";
 
+        /// <summary>
+        /// This variable will trigger in the Animator. 
+        /// You can use it for Transition Conditions.<br></br>
+        /// This variable gets called when the Popup closes.
+        /// </summary>
+        [Tooltip("This variable will trigger in the Animator. " +
+            "You can use it for Transition Conditions." +
+            "This variable gets called when the Popup closes.")]
         [SerializeField]
         private string _triggerVariableClose = "close";
 
+        /****************************************/
+        /****************Message Box***************/
         [Header("Message Box")]
-        [SerializeField] Image _messageBoxBackgroundImage;
-        [SerializeField] Image _messageBoxOverlay;
-        [SerializeField] TMP_Text _title;
-        [SerializeField] TMP_Text _message;
-
-        [Space]
         [SerializeField]
-        GameObject _imageContainer;
+        private Image _messageBoxBackgroundImage;
+        [SerializeField]
+        private Image _messageBoxOverlay;
 
-        /* /// <summary>
-         /// If true it will automatically refrence the ImageObjects based of the ImageContainer.
-         /// </summary>
-         [SerializeField]
-         [Tooltip("If true it will automatically refrence the ImageObjects based of the ImageContainer.")]
-         bool _autoIndexImageChildren = true;*/
+        /// <summary>
+        /// 
+        /// </summary>
+        [SerializeField]
+        private TMP_Text _title;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        [SerializeField]
+        private TMP_Text _message;
+
+        /// <summary>
+        /// The Container that holds all Images.
+        /// </summary>
+        [SerializeField]
+        private GameObject _imageContainer;
+
+        /// <summary>
+        /// 
+        /// </summary>
         [SerializeField]
         private MixinDictionary<PopupImagePosition, Image> _imageList =
             new MixinDictionary<PopupImagePosition, Image>();
 
-        [Obsolete]
-        Image _imageBackground;
-        [ConditionalField("_autoIndexImageChildren", false)]
-        [Obsolete]
-        Image _imageMiddleground;
-        [ConditionalField("_autoIndexImageChildren", false)]
-        [Obsolete]
-        Image _imageForeground;
-
+        /****************************************/
+        /****************Buttons***************/
+        /// <summary>
+        /// 
+        /// </summary>
         [Header("Buttons")]
-        [SerializeField] GameObject _buttonPrefabContainer;
-        [SerializeField] GameObject _buttonPrefab;
-        [SerializeField] MixinButton _closeXButton;
+        [SerializeField]
+        private GameObject _buttonPrefabContainer;
 
-        [Obsolete] TMP_Text SubmitButtonText;
-        [Obsolete] Button SubmitButton;
-        [Obsolete] TMP_Text CancelButtonText;
-        [Obsolete] Button CancelButton;
+        /// <summary>
+        /// 
+        /// </summary>
+        [SerializeField]
+        private GameObject _buttonPrefab;
 
-        [Header("Sounds")]
-        [SerializeField] AudioClip _soundDefault;
-        [SerializeField] AudioClip _soundConfirm;
-        [SerializeField] AudioClip _soundError;
-        [SerializeField] AudioClip _soundReward;
-        [SerializeField] AudioClip _soundClose;
+        /// <summary>
+        /// A list of buttons that will close the popup onClick. <br></br>
+        /// You can use this e.g. for clicking on the background and the [X]-Button.
+        /// </summary>
+        [Tooltip("A list of buttons that will close the popup onClick." +
+            "You can use this e.g. for clicking on the background and the [X]-Button.")]
+        [SerializeField]
+        private List<Button> _escapeButtonList = new List<Button>();
 
-        [Header("Colors")]
-        [SerializeField] Color _defaultButtonColor = Color.grey;
-        [SerializeField] Color _defaultColor = Color.white;
-        [SerializeField] Color _successColor = Color.green;
-        [SerializeField] Color _warningColor = Color.yellow;
-        [SerializeField] Color _errorColor = Color.red;
-
-        [Obsolete] private const float _SATURATION = 0.1f;
-        private PopupObject _lastOpenedPopupObject = null;
-
-        private AudioManager _audioManager;
+        /****************************************/
+        /*******************************/
+        /// <summary>
+        /// The Popup Queue.
+        /// </summary>
         private List<PopupObject> _popupObjectList = new List<PopupObject>();
+
+        /// <summary>
+        /// The Popup that is currently active or was previous opened.
+        /// </summary>
+        private PopupObject _lastOpenedPopupObject = null;
 
         /// <summary>
         /// This bool tells if there is currently a Popup open.
         /// </summary>
-        private bool _hasOpenPopup;
+        private bool _hasOpenPopup = false;
 
-        public static event Action OnPopupOpened;
-        public static event Action OnPopupClosed;
+        /****************************************/
+        /****************Events***************/
+        public static event Action<PopupObject> OnPopupOpened;
+        public static event Action<PopupObject> OnPopupClosed;
 
 
-        public bool SetupFinished { get; private set; } = false;
-
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             if (_autoSetup)
                 Setup();
+        }
+
+        private void OnEnable()
+        {
+            // Close Popup when clicked on the background.
+            // Close Popup when clicked on the [X]-Button.
+            foreach (Button button in _escapeButtonList)
+                button.onClick.AddListener(Close);
+        }
+
+        private void OnDisable()
+        {
+            // Clear button listeners
+            foreach (Button button in _escapeButtonList)
+                button.onClick.RemoveAllListeners();
         }
 
         public void Setup()
@@ -134,19 +186,16 @@ namespace Mixin.Popup
             if (_debugMode)
                 $"Setting up Popup".LogProgress();
 
-            _audioManager = AudioManager.Instance;
-
             _popupComposition.SetActive(false);
-
-            SetupFinished = true;
 
             if (_debugMode)
                 $"Popup set up".LogSuccess();
         }
         private void Clear()
         {
-            // Clear button listeners
-            _backgroundButton.onClick.RemoveAllListeners();
+            // Clear Color of Message Boxes.
+            _messageBoxBackgroundImage.color = Color.white;
+            _messageBoxOverlay.color = Color.white;
 
             // Set inactive
             _title.gameObject.SetActive(false);
@@ -196,13 +245,6 @@ namespace Mixin.Popup
 
             GenerateButtons(popupObject);
 
-            // Close Popup when clicked on the background.
-            if (_backgroundButton != null)
-                _backgroundButton.onClick.AddListener(Close);
-            // Close Popup when clicked on the [X]-Button.
-            if (_closeXButton != null)
-                _closeXButton.onClick.AddListener(Close);
-
             /* at this point it gets visible, config should be done before */
 
             // Now show everything
@@ -216,6 +258,8 @@ namespace Mixin.Popup
             // Remove object from list if it exists
             if (_popupObjectList.Contains(popupObject))
                 _popupObjectList.Remove(popupObject);
+
+            OnPopupOpened?.Invoke(popupObject);
 
             if (_debugMode)
                 $"Popup opened".LogSuccess();
@@ -239,12 +283,13 @@ namespace Mixin.Popup
             foreach (PopupButton button in popupObject.ButtonList)
             {
                 // Get the button component.
-                MixinButton buttonObj = _buttonPrefab.GeneratePrefab(_buttonPrefabContainer)
-                    .GetComponent<MixinButton>();
+                Button buttonObj = _buttonPrefab.GeneratePrefab(_buttonPrefabContainer)
+                    .GetComponent<Button>();
                 Image imageObj = buttonObj.GetComponent<Image>();
 
                 // Set the button text.
-                buttonObj.ButtonText.text = button.Text;
+                // TODO: Set Button Text
+                //buttonObj.Text.text = button.Text;
                 imageObj.color = button.BackgroundColor;
 
                 // Add the listeners.
@@ -263,7 +308,7 @@ namespace Mixin.Popup
         /// <param name="audioTrackSetup"></param>
         private void PlaySound(AudioTrackSetup audioTrackSetup)
         {
-            AudioManager.Instance.Play(audioTrackSetup);
+            AudioManager.Instance.PlayTrack(audioTrackSetup);
         }
 
         /// <summary>
@@ -271,7 +316,7 @@ namespace Mixin.Popup
         /// </summary>
         /// <param name="textObj"></param>
         /// <param name="text"></param>
-        private void SetText(TMP_Text textObj, string? text)
+        private void SetText(TMP_Text textObj, string text)
         {
             if (text != null)
             {
@@ -312,14 +357,15 @@ namespace Mixin.Popup
             _animator.SetTrigger(_triggerVariableClose);
         }
 
-        //this method gets called by the animator
+        // This method gets called by the animator
         public void HandleOnPopupClosed()
         {
             _popupComposition.SetActive(false);
 
-            // Fire Event on Popup Closed 
-            _lastOpenedPopupObject.FireOnPopupClosedEvent();
             _hasOpenPopup = false;
+            _lastOpenedPopupObject.FireOnPopupClosedEvent();
+            OnPopupClosed?.Invoke(_lastOpenedPopupObject);
+
             TryOpenNext();
 
             if (_debugMode)
